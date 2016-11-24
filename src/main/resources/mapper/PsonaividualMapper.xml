@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.PsonaividualMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 查询个人车位信息 -->
+	<select id="getloadPsonaividualAll" parameterType="hashmap" resultType="com.sharebo.entity.dto.PsonaividualDto" useCache="false">
+	SELECT cp.carportId,cp.rentoutType,h.housName,h.housAddress FROM mycarport cp,hous h WHERE cp.housId = h.housId AND cp.userid = #{userid} and (cp.isdelete=0 or cp.isdelete is null) order by addtime desc limit #{pageBegin},#{pageSize}
+	</select>
+	<!--查询个人车位信息总条数-->
+	<select id="getloadPsonaividualAllCount" resultType="Integer">
+		SELECT count(1)  FROM mycarport cp,hous h WHERE cp.housId = h.housId AND cp.userid = #{userid} and (isdelete=0 or isdelete is null)
+	</select>
+</mapper>

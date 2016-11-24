@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.SpeciesortMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 查询车的种类 -->
+	<select id="loadSpeciesortAll" resultType="com.sharebo.entity.Speciesort">
+		select specieid,speciename,specietype from Speciesort
+	</select>
+	<!-- 查询车的型号 -->
+	<select id="loadAllPatterntype" resultType="com.sharebo.entity.dto.Patterntypedto">
+		select patternid,patternname from Patterntype where specieid=#{specieid}
+	</select>
+	<resultMap type="com.sharebo.entity.dto.SpeciesortDto" id="lapt">
+		<id property="specieid" column="specieid"/>
+		<result property="speciename" column="speciename"/>
+		<result property="specietype" column="specietype"/>
+		<collection property="ptype" ofType="com.sharebo.entity.dto.Patterntype">
+			<id property="patternid" column="patternid"/>
+			<result property="patternname" column="patternname"/>
+		</collection>
+	</resultMap>
+	<select id="loadAllPatterntype2" resultMap="lapt">
+		select s.specieid,s.speciename,s.specietype,p.patternname,p.patternid from speciesort  s INNER JOIN  patterntype p on s.specieid=p.specieid
+	</select>
+</mapper>

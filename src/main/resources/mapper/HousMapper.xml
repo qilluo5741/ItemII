@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.HousMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 模糊查询 -->
+	<select id="selectByhousNameorhousAddress" resultType="com.sharebo.entity.dto.HousDto">
+		select h.housId,h.housName,h.housAddress from hous h where h.housName like '%${housName}%' or h.housAddress like '%${housName}%' and isaudit=0 LIMIT 5
+	</select>
+	<!-- 停车场添加 -->
+	<insert id="addHous" parameterType="com.sharebo.entity.Hous">
+		insert into hous(housId,housName,housAddress,createTime,isaudit,gaodeIds) values(UUID_SHORT(),#{housName},#{housAddress},#{createTime},0,#{gaodeIds})
+	</insert>
+	<!-- 查询车牌是否存在 -->
+	<select id="gethousNameBydoesitexist" parameterType="com.sharebo.entity.Hous" useCache="true" resultType="string">
+		select housName from Hous where housName=#{housName}
+	</select>
+	<select id="selectHousSynchronizeGaodeId" parameterType="com.sharebo.entity.dto.HousDto" resultType="com.sharebo.entity.dto.HousDto">
+		select housId,housName,housAddress from Hous where gaodeIds is null
+	</select>
+	<!-- 修改高德id -->
+	<update id="updatehousbygaodeid" parameterType="com.sharebo.entity.Hous">
+		update hous set gaodeIds=#{gaodeIds} where housId=#{housId}
+	</update>
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.TestMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<select id="loadAllTest" resultType="com.sharebo.entity.TestInfo">
+		select * from testtable
+		where name=#{name} or id=#{id}
+	</select>
+	<select id="loadAll" resultType="com.sharebo.entity.TestInfo">
+		select * from testtable
+	</select>
+	<update id="testupdate">
+		update testtable set name=#{name} where id=2
+	</update>
+</mapper>

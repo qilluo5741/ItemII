@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.OrderMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<select id="getParkFeeByParkId" resultType="com.sharebo.entity.dto.ParkOrderFeeDto" useCache="false">
+		select reservationfee,cash from park where parkId=#{parkId}
+	</select>
+	<!-- 添加订单 -->
+	<insert id="addOrderInfo" parameterType="com.sharebo.entity.OrderInfo">
+		insert into orderinfo(orderId,orderNum,orderType,placeorde_time,payType,order_state,carNo,userid,countMoney) 
+	value(#{orderId},#{orderNum},#{orderType},#{placeorde_time},#{payType},#{order_state},#{carNo},#{userid},#{countMoney})
+	</insert>
+	<!-- 添加公共订单详情 -->
+	<insert id="addParkOrderDetails" parameterType="com.sharebo.entity.ParkOrderDetailsInfo">
+		insert into parkorderdetails(porderId,parkId,beginTime,endTime,reservationfee,cash,thankFee,orderId) 
+		value(#{porderId},#{parkId},#{beginTime},#{endTime},#{reservationfee},#{cash},#{thankFee},#{order.orderId})
+	</insert>
+	<!-- 公共停车场详情查询 -->
+	<select id="getParkOrderDetail" resultType="com.sharebo.entity.dto.ParkOrderDetails" useCache="false">
+	select o.orderId,o.orderNum,o.countMoney,o.order_state,o.payType,p.parkName,p.parkAddress,pod.beginTime,pod.endTime,pod.thankFee,pod.reservationFee,pod.cash from orderinfo o,parkorderdetails pod,park p 
+	where o.orderId=pod.orderId and pod.parkId=p.parkid
+		and o.orderId=#{orderId}
+	</select>
+	<!-- 验证该车位是否是长租 -->
+	<select id="valCarPortIsLongRentByCarportId" resultType="int">
+		select count(1) from mycarport where carportId=#{carportId} and rentoutType=0
+	</select>
+	<!-- 验证车位是否已经被租用 -->
+	<select id="valCarPortIsRentByCarportId" resultType="int">
+	select count(1) from orderinfo o,CarPortOrderDetails cod
+			where o.orderId=cod.orderid
+		 and cod.carportId=#{carportId} and o.order_state!=2
+	</select>
+	<!-- 添加个人车位详情 -->
+	<insert id="addCarportorDerdetails" parameterType="com.sharebo.entity.CarPortOrderDetailInfo">
+		INSERT INTO carportorderdetails (
+			cpodId,
+			housId,
+			detailedAddress,
+			rentoutType,
+			housType,
+			serialnumber,
+			parkremark,
+			orderId,
+			money,
+			feeType,
+			carportId
+		)
+		select 
+			 #{cpodId},#{housId},#{detailedAddress},
+			#{rentoutType},#{housType},#{serialnumber},#{parkremark},
+			#{order.orderId},#{money},#{feeType},#{carportId}
+			from dual where   
+			not EXISTS (
+			select 1 from orderinfo o,CarPortOrderDetails cod 
+		where o.orderId=cod.orderid
+	 	and  cod.carportId=#{carportId} and  o.order_state!=2
+			)
+	</insert>
+	<!-- 添加个人车位详情 -->
+	<insert id="addCarportorDerdetailsByTemp" parameterType="com.sharebo.entity.CarPortOrderDetailInfo">
+	INSERT INTO carportorderdetails (
+		cpodId,
+		housId,
+		detailedAddress,
+		rentoutType,
+		housType,
+		serialnumber,
+		parkremark,
+		orderId,
+		money,
+		feeType,
+		carportId
+	)
+	select 
+		 #{cpodId},#{housId},#{detailedAddress},
+		#{rentoutType},#{housType},#{serialnumber},#{parkremark},
+		#{order.orderId},#{money},#{feeType},#{carportId}
+		from dual
+</insert>
+<!-- 添加个人临时订单时间 -->
+<insert id="addMyCarOrderTime" parameterType="com.sharebo.entity.MyCarOrderTime">
+	insert into MyCarOrderTime(motId,rentDate,beginTime,endTime,cpodId)
+	VALUE(#{motId},#{rentDate},#{beginTime},#{endTime},#{cpod.cpodId})
+</insert>
+<!-- 查询当前 车位时间是否已经被预约-->
+<select id="getMyCarOrderTime"  resultType="com.sharebo.entity.MyCarOrderTime" useCache="false">
+	select cot.* from MyCarOrderTime cot,CarPortOrderDetails cpod,orderinfo o where cot.cpodId=cpod.cpodId and o.orderId=cpod.orderId
+	and o.orderType!=2 and cpod.carportId=#{carportId} and cot.rentDate=#{rentDate}
+</select>
+<!-- 添加长租个人详情 -->
+<insert id="addLeaseorderdetails" parameterType="com.sharebo.entity.LeaseOrderDetailInfo">
+	insert into leaseorderdetails(
+		lodId,
+		timetype,
+		enddayTime,
+		begindayTime,
+		endmonthTime,
+		beginmonthTime,
+		cpodId
+	)value(
+		#{lodId},#{timetype},#{enddayTime},#{begindayTime},#{endmonthTime},#{beginmonthTime},#{cpod.cpodId}
+	)
+</insert>
+<!-- 修改订单状态 -->
+  <update id="CallBack_updateOrderState">
+    update  orderinfo SET order_state=2 WHERE orderNum=#{orderNum}
+  </update>
+  <!-- 查询验证星期是否为禁用 -->
+	<select id="valdisableWeek" resultType="int">
+		select count(1) from  weekrules  
+			<where>
+				<if test="week==1"><!-- 星期日 -->
+					sunday_begin=sunday_end
+				</if>
+				<if test="week==2"><!-- 星期一 -->
+					monday_begin=monday_end
+				</if>
+				<if test="week==3"><!-- 星期二 -->
+					tuesday_begin=tuesday_end
+				</if>
+				<if test="week==4"><!-- 星期三 -->
+					wednesday_begin=wednesday_end
+				</if>
+				<if test="week==5"><!-- 星期四 -->
+					thursday_begin=thursday_end
+				</if>
+				<if test="week==6"><!-- 星期五 -->
+					friday_begin=friday_end
+				</if>
+				<if test="week==7"><!-- 星期六 -->
+					saturday_begin=saturday_end
+				</if>
+			</where>
+			and carportId=#{carportId}
+	</select>
+	<!-- 验证小时是否合法 -->
+	<select id="valDayisExists" resultType="int">
+		select count(1) from dayrules 
+		<where>${sql} </where>
+	</select>
+	<!--验证小时规则是否存在 -->
+	<select id="valHoursIsExists" resultType="int">
+		select count(1) from dayrules where  carportId=#{carportId} and thisDay=#{thisDay}
+	</select>
+	<!-- 根据parkid查询用户的星期规则 -->
+	<select id="weekTime" resultType="com.sharebo.entity.Weekrules" parameterType="string">
+		select * from weekrules where carportId=#{carportId}
+	</select>
+  <!-- 专位订单记录查询 -->
+  <select id="getCarportOrderInfoByUserid" parameterType="hashmap" resultType="com.sharebo.entity.dto.CarportOrderInfo" useCache="false">
+		  SELECT
+			h.housName,
+			o.orderNum,
+			o.placeorde_time,
+			o.countMoney,
+			o.payType,
+			o.orderId,
+		    cpdt.rentoutType,
+		    o.order_state
+		FROM
+			carportorderdetails cpdt,
+			orderinfo o,
+			hous h
+		WHERE
+			o.orderId = cpdt.orderId
+		AND h.housId = cpdt.housId
+		AND o.userid =#{userid}
+		order by o.placeorde_time desc
+		limit #{pageBegin},#{pageSize}
+  </select>
+  <!-- 专位订单记录总数 -->
+  <select id="getCarportOrderInfoCount" resultType="int">
+	SELECT count(1) FROM
+		carportorderdetails cpdt,
+		orderinfo o,
+		hous h
+	WHERE
+		o.orderId = cpdt.orderId
+	AND h.housId = cpdt.housId
+	AND o.userid =#{userid}
+  </select>
+  <!-- 公共停车场订单记录查询 -->
+  <select id="getParkOrderInfoByUserid" parameterType="hashmap" resultType="com.sharebo.entity.dto.ParkOrderInfo" useCache="false">
+      SELECT
+			p.parkName,
+			o.orderNum,
+			o.placeorde_time,
+			o.countMoney,
+			o.payType,
+            o.orderId,
+            o.order_state
+		FROM
+			parkorderdetails podt,
+			orderinfo o,
+			park p
+		WHERE
+			o.orderId = podt.orderId
+		AND p.parkId = podt.parkId
+		AND o.userid =#{userid}
+        order by o.placeorde_time DESC
+		limit #{pageBegin},#{pageSize}
+  </select>
+  <!-- 公共停车场订单记录总数 -->
+  <select id="getParkOrderInfoCount" resultType="int">
+  select count(1) FROM parkorderdetails podt,
+			orderinfo o,
+			park p
+		WHERE
+			o.orderId = podt.orderId
+		AND p.parkId = podt.parkId
+		AND o.userid =#{userid}
+  </select>
+  <!-- 长租订单详情查询 -->
+  <select id="getLongRentOrderDetails" resultType="com.sharebo.entity.dto.LongRentOrderDto" useCache="false">
+		    SELECT
+				u.phone,
+				o.orderNum,
+				o.payType,
+				o.countMoney,
+				o.order_state,
+				o.orderId,
+				h.housName,
+				h.housAddress,
+				lod.timetype,
+				lod.enddayTime,
+				lod.begindayTime,
+				lod.endmonthTime,
+				lod.beginmonthTime
+			FROM
+				mycarport mc,
+				carportorderdetails cap,
+				orderinfo o,
+				userinfo u,
+				leaseorderdetails lod,
+				hous h
+			WHERE
+				mc.carportId = cap.carportId
+			AND o.orderId = cap.orderId
+			AND mc.userid = u.userid
+			AND lod.cpodId = cap.cpodId
+			AND cap.housId = h.housId
+			AND o.orderId =#{orderId}
+  </select>
+  <!-- 临时停车订单详情查询 -->
+  <select id="getTempOrderDetail" resultType="com.sharebo.entity.dto.TempOrderDto" useCache="false">
+			SELECT
+				u.phone,
+				o.orderNum,
+				o.payType,
+				o.countMoney,
+				o.order_state,
+				o.orderId,
+				h.housName,
+				h.housAddress,
+				mco.rentDate,
+			    mco.beginTime,
+			    mco.endTime,
+			    mc. money,
+			    mc.feeType
+			FROM
+				orderinfo o,
+				carportorderdetails cap,
+				mycarordertime mco,
+				mycarport mc,
+				hous h,
+				userinfo u
+			WHERE
+				o.orderId = cap.orderId
+			AND mco.cpodId = cap.cpodId
+			AND mc.carportId = cap.carportId
+			AND h.housId = cap.housId
+			AND u.userid = mc.userid
+			AND o.orderId = #{orderId}
+  </select>
+  <!-- 用户评价 -->
+  <update id="updateEvaluationByOrderId">
+     update parkorderdetails set evaluation=#{evaluation} where orderId=#{orderId}
+  </update>
+  <!-- 供方个人车位临时出租订单查询 -->
+  <select id="selectTemporaryRentInfo" parameterType="hashmap" resultType="com.sharebo.entity.dto.TemporaryRentDto" useCache="false">
+	  SELECT u.phone,o.orderId,o.orderNum,o.carNo,o.order_state,mc.rentDate,mc.beginTime,mc.endTime FROM orderinfo o,userinfo u,carportorderdetails cap,mycarordertime mc WHERE o.orderId=cap.orderId AND o.userid=u.userid AND mc.cpodId=cap.cpodId AND cap.carportId in(SELECT carportId FROM mycarport WHERE userid=#{userid})
+	  order by mc.beginTime desc limit #{pageBegin},#{pageSize}
+  </select>
+   <!--供方个人车位长租订单查询总数-->
+  <select id="getTemporaryRentCount" resultType="int">
+  	SELECT count(1) FROM orderinfo o,userinfo u,carportorderdetails cap,mycarordertime mc WHERE o.orderId=cap.orderId AND o.userid=u.userid AND mc.cpodId=cap.cpodId AND cap.carportId in(SELECT carportId FROM mycarport WHERE userid=#{userid})
+  </select>
+  <!-- 供方个人车位长租订单查询 -->
+  <select id="selectLontRentInfo" parameterType="hashmap" resultType="com.sharebo.entity.dto.LongRentDto" useCache="false">
+	  SELECT u.phone,o.orderId,o.orderNum,o.carNo,o.order_state,ldt.timetype,ldt.begindayTime,ldt.enddayTime,ldt.beginmonthTime,ldt.endmonthTime FROM orderinfo o,carportorderdetails cap,userinfo u,leaseorderdetails ldt WHERE o.orderId=cap.orderId AND cap.cpodId=ldt.cpodId AND o.userid=u.userid AND cap.carportId in(SELECT carportId FROM mycarport WHERE userid=#{userid})
+	  order by o.placeorde_time desc limit #{pageBegin},#{pageSize}
+  </select>
+  <!--供方个人车位长租订单查询总数-->
+  <select id="getLongRentCount" resultType="int">
+  SELECT
+		count(1)
+	FROM
+		orderinfo o,
+		carportorderdetails cap,
+		userinfo u,
+		leaseorderdetails ldt
+	WHERE
+		o.orderId = cap.orderId
+	AND cap.cpodId = ldt.cpodId
+	AND o.userid = u.userid
+	AND cap.carportId IN (
+		SELECT
+			carportId
+		FROM
+			mycarport
+		WHERE
+			userid =#{userid})
+  </select>
+  <!-- 供方接受订单 -->
+  <update id="updateOrderStateByOrderId">
+      UPDATE orderinfo SET order_state=#{order_state},supplierconfirm_time=NOW() WHERE orderNum=#{orderNum}
+  </update>
+  <!--通过orderNum查询订单状态 -->
+  <select id="selectOrderStateByOrderId" resultType="com.sharebo.entity.dto.OrderStateDto" useCache="false">
+			SELECT
+				o.order_state,
+				o.payType,
+			    o.countMoney,
+			    u.userid
+			FROM
+				orderinfo o,
+				carportorderdetails cap,
+				userinfo u,
+				mycarport mc
+			WHERE
+				o.orderId = cap.orderId
+			AND cap.carportId = mc.carportId
+			AND mc.userid=u.userid
+			AND orderNum = ${orderNum}
+  </select>
+  <!-- 供方我的订单（长租） -->
+  <select id="getLongRentInfo" parameterType="hashmap" resultType="com.sharebo.entity.dto.SupplierOrder"  useCache="false">
+    SELECT o.orderId,o.order_state,o.carNo,u.phone FROM orderinfo o,userinfo u,carportorderdetails cap,mycarport mc WHERE o.orderId=cap.orderId AND o.userid=u.userid AND mc.carportId=cap.carportId AND o.payType!=0  AND cap.rentoutType=0 AND mc.carportId in (SELECT carportId FROM mycarport WHERE userid=#{userid}) order by o.placeorde_time desc limit #{pageBegin},#{pageSize}
+  </select>
+  <!--供方我的订单（长租）总数  -->
+  <select id="getLongRentInfoCount" resultType="int">
+    SELECT count(1) FROM orderinfo o,userinfo u,carportorderdetails cap,mycarport mc WHERE o.orderId=cap.orderId AND o.userid=u.userid AND mc.carportId=cap.carportId AND o.payType!=0  AND cap.rentoutType=0 AND mc.carportId in (SELECT carportId FROM mycarport WHERE userid=#{userid})
+  </select>
+  <!-- 供方我的订单（临时出租） -->
+  <select id="getTemporaryRentInfo" parameterType="hashmap" resultType="com.sharebo.entity.dto.SupplierOrder"  useCache="false">
+    SELECT o.orderId,o.order_state,o.carNo,u.phone FROM orderinfo o,userinfo u,carportorderdetails cap,mycarport mc WHERE o.orderId=cap.orderId AND o.userid=u.userid AND mc.carportId=cap.carportId AND o.payType!=0  AND cap.rentoutType=1 AND mc.carportId in (SELECT carportId FROM mycarport WHERE userid=#{userid}) order by o.placeorde_time desc limit #{pageBegin},#{pageSize}
+  </select>
+  <!-- 供方我的订单（临时出租）总数 -->
+  <select id="getTemporaryRentInfoCount" resultType="int">
+    SELECT count(1) FROM orderinfo o,userinfo u,carportorderdetails cap,mycarport mc WHERE o.orderId=cap.orderId AND o.userid=u.userid AND mc.carportId=cap.carportId AND o.payType!=0  AND cap.rentoutType=1 AND mc.carportId in (SELECT carportId FROM mycarport WHERE userid=#{userid})
+  </select>
+  <!-- 供方我的订单临时出租详情 -->
+  <select id="getTemporaryRentDetails" resultType="com.sharebo.entity.dto.TemporaryRentDto"  useCache="false">
+    SELECT u.phone,o.orderId,o.orderNum,o.carNo,o.order_state,mcd.rentDate,mcd.beginTime,mcd.endTime FROM  orderinfo o,carportorderdetails cap,mycarordertime mcd,userinfo u WHERE cap.cpodId=mcd.cpodId AND cap.orderId=o.orderId AND o.userid=u.userid AND o.orderId=#{orderId}
+  </select>
+  <!-- 供方我的订单长租详情 -->
+  <select id="getLongRentDetails" resultType="com.sharebo.entity.dto.LongRentDto" useCache="false">
+  SELECT u.phone,o.orderId,o.orderNum,o.carNo,o.order_state,les.timetype,les.begindayTime,les.enddayTime,les.beginmonthTime,les.endmonthTime FROM  orderinfo o,carportorderdetails cap,leaseorderdetails les,userinfo u WHERE cap.cpodId=les.cpodId AND cap.orderId=o.orderId AND o.userid=u.userid AND o.orderId=#{orderId}
+  </select>
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.CarinfoMapper">
+<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--查询用户所有车牌  -->
+	<select id="getloadAllCarinfo" resultType="com.sharebo.entity.dto.CarinfoDto">
+		select carid,carNo,carType,carColor,userid from carinfo where userid=#{userid} and isdelete=0
+	</select>
+	<!-- 删除车牌 -->
+	<update id="delectCarinfocarNo" parameterType="com.sharebo.entity.Carinfo">
+		update carinfo set isdelete=1 where carId=#{carId}
+	</update>
+	<!-- 添加车牌 -->
+	<insert id="addCarinfo" parameterType="com.sharebo.entity.Carinfo">
+		insert into carinfo(carId,carNo,carType,carColor,userid,isdelete) values(UUID_SHORT(),#{carNo},#{carType},#{carColor},#{userid},0)
+	</insert>
+	<!-- 查询车牌是否存在 -->
+	<select id="getcarNoBydoesitexist" parameterType="com.sharebo.entity.Carinfo" useCache="true" resultType="string">
+		select carNo from carinfo where carNo=#{carNo} and isdelete=0
+	</select>
+		<select id="getloadCar" resultType="com.sharebo.entity.dto.CarDto">
+		select c.carid,c.carNo from carinfo c where c.userid=#{userid} and c.isdelete=0
+	</select>
+</mapper>

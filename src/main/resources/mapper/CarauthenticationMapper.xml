@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.CarauthenticationMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 判断是否认证 -->
+	<select id="getcarauthenticationIdBydoesitexist" parameterType="com.sharebo.entity.Carauthentication" useCache="true" resultType="int">
+		select count(1) from Carauthentication where userid=#{userid}
+	</select>
+	<!-- 修改认证信息 -->
+	<!-- <update id="updateCarauthentication"  parameterType="com.sharebo.entity.Carauthentication">
+		update Carauthentication set email=#{email},xlicense=#{xlicense},jlicence=#{jlicence},carId=#{carId},carauthenticationTime=#{carauthenticationTime} where userid=#{userid} 
+	</update> -->
+	<!-- 添加认证信息 -->
+	<insert id="addCarauthentication" parameterType="com.sharebo.entity.Carauthentication">
+			insert into carauthentication(carauthenticationId,email,xlicense,jlicence,carId,userid,carauthenticationState,carauthenticationTime) values (UUID_SHORT(),#{email},#{xlicense},#{jlicence},#{carId},#{userid},#{carauthenticationState},#{carauthenticationTime})
+	</insert>
+</mapper>

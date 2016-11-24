@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.AdvertisMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--广告查询  -->
+	<select id="getloadAdvertis" resultType="com.sharebo.entity.dto.AdvertisDto">
+		select a.advertisId,a.advertisAddress from advertis a where a.opinion=#{opinion} and isdelete=0
+	</select>
+</mapper>

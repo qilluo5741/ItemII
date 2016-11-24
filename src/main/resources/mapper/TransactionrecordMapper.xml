@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.TransactionrecordMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 分页查询交易记录 -->
+	<select id="getTransactionrecordByPager" parameterType="hashmap" resultType="com.sharebo.entity.dto.TransactionrecordDto">
+		select t.tradeType,t.tradeMoney,t.tradeTime FROM transactionrecord t WHERE t.recordstate = 0 and t.userid=#{userid} ORDER BY t.tradeTime desc LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询总数 -->
+	<select id="getTransactionrecordcount" parameterType="string" resultType="int">
+		select count(1) from transactionrecord WHERE recordstate =0 and userid=#{userid}
+	</select>
+</mapper>

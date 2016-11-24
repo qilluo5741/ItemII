@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.ParkPaymentMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--停车缴费 -->
+	<select id="getParkPayment" resultType="com.sharebo.entity.ParkPayment" useCache="false">
+		SELECT pk.parkcharge,pk.payidentifying,pk.payState,pk.beginTime,pk.endTime,pk.payMoney,p.parkname,p.parkAddress
+		FROM
+			parkcharge pk,park p
+		WHERE pk.beginTime = (SELECT MAX(beginTime) FROM parkcharge where payState=0)
+		AND pk.parkId = p.parkId
+		AND pk.userid = #{userid}
+	</select>
+</mapper>

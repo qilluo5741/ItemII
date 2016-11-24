@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.WithdrawalRecordMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 分页查询提现记录 -->
+	<select id="getWithdrawalRecordDtoByUserid" parameterType="hashmap" resultType="com.sharebo.entity.dto.WithdrawalRecordDto">
+		 SELECT
+			w.wrmoney,
+			w.wrtime,
+			w.wrstate,
+			w.cashAccount,
+		    w.isdelete
+		FROM
+			withdrawalrecord w
+		INNER JOIN userinfo u ON u.userid = w.userid
+		AND u.userid =#{userid}
+		and (w.isdelete=0 or w.isdelete is null) 
+		ORDER BY
+			w.wrtime DESC
+		LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询提下记录总数 -->
+	<select id="pagerWithdrawalRecordCount" parameterType="String" resultType="Integer">
+		select count(1) from withdrawalrecord where userid=#{userid} and isdelete=0
+	</select>
+	<!-- 根据userid 和金额 验证数据是否合法 -->
+	<select id="valAvailableBalance" resultType="int">
+		select count(1) from wallet where userid=#{userid} and availableBalance>=100 and availableBalance>=#{money}
+	</select>
+	<!-- 修改余额-->
+	<update id="updateAvailableBalance">
+		update wallet set availableBalance=availableBalance-#{money} where userid=#{userid} and availableBalance>=#{money} 
+	</update>
+	<!-- 添加提现记录 -->
+	<insert id="insertwithdrawalrecord">
+		insert into withdrawalrecord(wrId,userid,wrmoney,cashAccount,wrstate,wrtime,isdelete)
+	value(UUID_SHORT(),#{userid} ,#{money},(select payNo from userinfo where userid=#{userid}),0,NOW(),0)
+	</insert>
+	<!-- 验证支付宝中账号是否为空 -->
+	<select id="valuserinfoByPayNo" resultType="int" useCache="true">
+		select count(1) from userinfo where (payNo is null or payNo='') and userid=#{userid}
+	</select>
+	</mapper>

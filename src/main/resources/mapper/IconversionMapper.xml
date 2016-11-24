@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.IconversionMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--版本信息控制查询-->
+	<select id="getloadAllconversion" resultType="com.sharebo.entity.Iconversion" useCache="true">
+		select vid,iconNo,pno,carNo from iconversion
+	</select>
+</mapper>

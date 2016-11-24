@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.AuthuserinfoMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 查询登录 -->
+	<select id="getAuthloginByuserid" parameterType="com.sharebo.entity.dto.AuthUserinfo" resultType="string">
+		select userid from userinfo where phone=#{phone} and password=#{password}
+	</select>
+	<update id="updateUserInfoTokenByUserId">
+		update userinfo set valToken=#{token} where userid=#{userid} 
+	</update>
+	<!-- 查询用户注册信息 -->
+	<select id="getUserInfoIsNullByPhone" parameterType="string" resultType="com.sharebo.entity.dto.RegisteredDto">
+		select password,userid,regCodeTime,retrievePwdSmsCodeTime from userinfo  where phone=#{phone}
+	</select>
+	<!-- 添加user-->
+	<insert id="addUserInfo">
+		insert into userinfo(userid,phone,regCodeTime,regCode) value(UUID_SHORT(),#{phone},now(),#{code})
+	</insert>
+	<!-- 根据手机号修改验证码-->
+	<update id="updateRegCodeByUserid">
+		update userinfo set regCode=#{code},regCodeTime=now() where userid=#{userid}
+	</update>
+	<!-- 根据手机号和验证码验证是否一致 -->
+	<select id="valCodeByphoneAndCode" resultType="int">
+		select count(1) from userinfo where phone=#{phone} and regCode=#{regCode}
+	</select>
+	<!-- 验证数据库中的手机号与提交码是否一致 -->
+	<select id="valCommitCodeByPhoneAndUserId" resultType="int">
+		select count(1) from userinfo where phone=#{phone} and userid=#{commitCode} and regCode is not  null
+	</select>
+	<!-- 验证数据库中的手机号与提交码是否一致 -->
+	<select id="valCommitCodeByPhoneAndUserIdToretrievePwd" resultType="int">
+		select count(1) from userinfo where phone=#{phone} and userid=#{commitCode} and retrievePwdSmsCode is not  null
+	</select>
+	<!-- 修改用户密码！代表已经注册成功 -->
+	<update id="updateUserPasswordByPhone">
+		update userinfo set regCode=null,regDate=now(),`password`=#{password},inviteCode=#{inviteCode}where phone=#{phone}
+	</update>
+	<!-- 修改用户被邀请的记录状态 -->
+	<update id="updateInviteState">
+		update invitefriends set inviteState=1 where tophone=#{phone}
+	</update>
+	<!-- 初始化一个钱包表 -->
+	<insert id="insertWallet">
+		insert into wallet(walletId,availableBalance,freezeBalance,userid) 
+			value(UUID_SHORT(),0.0,0.0,(select userid from userinfo where phone=#{phone}))
+	</insert>
+	<!-- 修改找回密码验证码 -->
+	<update id="updateretrievePwdCode">
+		update userinfo set retrievePwdSmsCode=#{code}, retrievePwdSmsCodeTime=NOW() where phone=#{phone}
+	</update>
+	<!-- 找回密码验证手机号与验证码是否匹配 -->
+	<select id="valrievePhoneCode" resultType="int">
+		select count(1) from userinfo where phone=#{phone} and retrievePwdSmsCode=#{code}
+	</select>
+	<!-- 找回密码，修改密码 -->
+	<update id="retrievePwdUpdate">
+		update userinfo set `password`=#{password} ,retrievePwdSmsCode=null where userid=#{userid} and phone=#{phone}
+	</update>
+</mapper>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.StartlaunchMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--启动页  -->
+	<select id="getloadAllStartlaunch" resultType="com.sharebo.entity.Startlaunch" useCache="false">
+		select startlaid,startsize,starturl from startlaunch where startsize=#{startsize} and startopinion=#{startopinion} and isdelete=0
+	</select>
+</mapper>

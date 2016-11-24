@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.ProprietaryMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--专有车位查询  -->
+	<select id="getloadAllProprietary" resultType="com.sharebo.entity.dto.ProprietaryDto" useCache="false">
+		SELECT h.housAddress,h.housName,m.carportId,m.housId,m.housType,m.detailedAddress,m.serialnumber,m.parkremark,m.rentoutType,m.money,m.feeType,m.contacts,m.information
+		FROM mycarport m,hous h WHERE h.housId=m.housId and m.carportId = #{carportId} and (m.isdelete=0 or m.isdelete is null)
+	</select>
+</mapper>

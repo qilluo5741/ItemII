@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.WalletMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 查询用户可用余额和冻结金额 -->
+	<select id="getAvailableBalance" resultType="com.sharebo.entity.dto.WalletDto" useCache="false">
+	   select availableBalance,freezeBalance from wallet where userid=#{userid}
+	</select>
+	<!-- 添加数据 -->
+	<insert id="addWalletation" parameterType="com.sharebo.entity.Wallet">
+		insert into Wallet values(UUID_SHORT(),#{availableBalance},#{freezeBalance},#{userid});
+	</insert>
+</mapper>

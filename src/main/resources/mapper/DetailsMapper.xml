@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.DetailsMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 查询车位信息 -->
+	<select id="getloadAllDetails" resultType="com.sharebo.entity.dto.DetailsDto" useCache="false">
+		SELECT h.housName,h.housAddress,h.housId,mp.carportId,mp.parkremark,mp.detailedAddress,mp.housType,mp.money,mp.feeType,u.name,u.phone,mp.serialnumber FROM mycarport mp,hous h,userinfo u where mp.carportId=#{carportId} and mp.housId=h.housId and mp.userid=u.userid
+	</select>
+	<!-- 查询是否收藏 -->
+	<select id="getloadAllDetailCount" resultType="Integer" useCache="false">
+		SELECT count(1) FROM carcollection where userid=#{userid} and isDelete=0 and identifying=#{identifying}
+	</select>
+</mapper>

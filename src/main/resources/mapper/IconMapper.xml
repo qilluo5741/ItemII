@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.IconMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--ICO查询  -->
+	<select id="getloadIconertis" resultType="com.sharebo.entity.dto.IconDto">
+		select i.iconId,i.iconName,i.iconUrl,i.iconLogo,i.iconMark from icon i where i.opinions=#{opinions} and isdelete=0
+	</select>
+</mapper>

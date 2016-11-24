@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.InviteFriendsMapper">
+<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+<!-- 分页邀请好友记录查询 -->
+<select id="selectInviteFriendsInfo" parameterType="hashmap" resultType="com.sharebo.entity.dto.InviteFriendsDto">
+   select inviteTime,tophone,inviteState from InviteFriends where userid=#{userid} ORDER BY inviteTime desc limit #{pageBegin},#{pageSize}
+</select>
+<!-- 邀请记录总数查询 -->
+<select id="selectCount" resultType="Integer">
+    select count(1) from InviteFriends where userid=#{userid}
+</select>
+<!-- 邀请好友 -->
+<insert id="insertInviteFriends" parameterType="com.sharebo.entity.InviteFriends">
+    insert into invitefriends values(UUID_SHORT(),#{tophone},#{inviteTime},#{carNo},#{userid},#{inviteCode},0)
+</insert>
+<!-- 验证邀请的好友是否已被邀请 -->
+<select id="valueFriends" resultType="int">
+    select count(1) from invitefriends where tophone=#{tophone}
+</select>
+<!-- 验证邀请的好友是否已经注册 -->
+<select id="valueFriendsisRegist" resultType="int">
+     select count(1) from userinfo where phone=#{tophone}
+</select>
+<!-- 查询邀请码 -->
+<select id="selectInviteCode" resultType="String">
+   select inviteCode from userinfo where userid=#{userid}
+</select>
+<!-- 查询手机号码 -->
+<select id="selectPhone" resultType="String">
+    select phone from userinfo where userid=#{userid}
+</select>
+<!-- 查询已经注册的用户 -->
+<select id="selectPhoneisexist" resultType="com.sharebo.entity.dto.AuthUserinfo" parameterType="com.sharebo.entity.dto.AuthUserinfo" useCache="false">
+    SELECT * FROM userinfo WHERE phone IN ( SELECT tophone FROM InviteFriends WHERE userid = #{userid}) AND PASSWORD IS NOT NULL
+</select>
+<!-- 修改状态邀请状态 -->
+<update id="updateinviteState" parameterType="com.sharebo.entity.InviteFriends">
+	update InviteFriends SET inviteState = 1 WHERE tophone=#{tophone}
+</update>
+</mapper>

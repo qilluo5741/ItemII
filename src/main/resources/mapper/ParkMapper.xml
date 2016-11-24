@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.ParkMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU" />
+	<!-- 添加一个车位信息 -->
+	<insert id="addMyCartInfo" parameterType="com.sharebo.entity.MyCarPort">
+		insert into mycarport(carportId,HousId,detailedAddress,housType,serialnumber,parkremark,rentoutType,userid,addtime,money,feeType,contacts,information,Invidualimg)
+		VALUE(#{carportId},#{housId},#{detailedAddress},#{housType},#{serialnumber},#{parkremark},#{rentoutType},#{userid},now(),#{money},#{feeType},#{contacts},#{information},#{Invidualimg})
+	</insert>
+	<!-- 添加长租表信息 -->
+	<insert id="addLongrentInfo" parameterType="com.sharebo.entity.LongrentInfo">
+		insert into longrent(longrentId,timeType,beginmonthTime,endmonthTime,beginDayTime,endDayTime,carportId,thecontact,contact,personalphoto)
+		value(UUID_SHORT(),#{timetype},#{beginmonthTime},#{endmonthTime},#{begindayTime},#{enddayTime},#{carport.carportId},#{thecontact},#{contact},#{personalphoto})
+	</insert>
+	<!-- 验证车位编号是否已经添加 -->
+	<select id="valserialnumberIsExists" resultType="int">
+		select count(1) from mycarport where serialnumber=#{serialnumber} and userid=#{userid} and (isdelete=0 || isdelete is null) and housId=#{housId}
+	</select>
+	<!-- 添加时间规则 -->
+	<insert id="addweekrules">
+		INSERT INTO weekrules VALUES(UUID_SHORT(),'00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00',now(),#{carportId})
+	</insert>
+	<!-- 根据车位主键查询星期规则 -->
+	<select id="getWeekrulesByCarportId" resultType="com.sharebo.entity.Weekrules">
+		select * from weekrules where carportId=#{carportId}
+	</select>
+	<!-- 修改车位星期规则时间 -->
+	<update id="updateWeekrulesByWeekid" parameterType="com.sharebo.entity.Weekrules">
+		update Weekrules set
+			monday_begin=#{monday_begin},monday_end=#{monday_end},
+			tuesday_begin=#{tuesday_begin},tuesday_end=#{tuesday_end},
+			wednesday_begin=#{wednesday_begin},wednesday_end=#{wednesday_end},
+			thursday_begin=#{thursday_begin},thursday_end=#{thursday_end},
+			friday_begin=#{friday_begin},friday_end=#{friday_end},
+			saturday_begin=#{saturday_begin},saturday_end=#{saturday_end},
+			sunday_begin=#{sunday_begin},sunday_end=#{sunday_end},
+			update_time=now()
+	 			where weekid=#{weekid}
+	</update>
+	<!-- 查询长租详情 -->
+	<select id="getLongrentInfo" resultType="com.sharebo.entity.dto.LongCarDetailsDto">
+		select cp.carportId,cp.rentoutType,cp.housId,cp.detailedAddress,cp.housType,cp.serialnumber,cp.parkremark,
+		cp.money,lo.timetype,lo.beginmonthTime,lo.endmonthTime,lo.beginDayTime,lo.endDayTime,lo.thecontact,lo.contact,h.housName,h.housAddress
+  from mycarport cp,longrent lo,hous h where cp.rentoutType=0 and cp.carportId=lo.carportId and h.housId=cp.housId and cp.carportId=#{carportId} 
+  	and (cp.isdelete=0 or cp.isdelete is null)
+	</select>
+	<!-- 修改长租详情 -->
+	<update id="updateLongrent" parameterType="com.sharebo.entity.LongrentInfo">
+		update longrent set 
+			timetype=#{timetype},
+			beginmonthTime=#{beginmonthTime},
+			endmonthTime=#{endmonthTime},
+			begindayTime=#{begindayTime},
+			enddayTime=#{enddayTime},
+			contact=#{contact},
+			thecontact=#{thecontact}
+		where carportId=#{carport.carportId}
+	</update>
+	<!-- 修改车位信息 -->
+	<update id="updateMycarPort" parameterType="com.sharebo.entity.MyCarPort">
+		update mycarport set
+		 housId=#{housId},
+		 detailedAddress=#{detailedAddress},
+		 housType=#{housType},serialnumber=#{serialnumber},
+		 parkremark=#{parkremark},rentoutType=#{rentoutType},money=#{money},contacts=#{contacts},information=#{information} where carportId=#{carportId}
+	</update>
+	<!-- 查询一个临时车位当月全部禁用的时间 -->
+	<select id="selectParkMonthAllDayRlus" parameterType="hashmap" resultType="string">
+		select thisDay from dayrules where carportId=#{parkid} and thisDay>=#{begin} and thisDay &lt; #{end}
+			and ( hours_01 is null or hours_01=0 ) and ( hours_02 is null or hours_02=0 ) and ( hours_03 is null or hours_03=0 ) and ( hours_04 is null or hours_04=0 ) and ( hours_05 is null or hours_05=0 ) and ( hours_06 is null or hours_06=0 ) and ( hours_07 is null or hours_07=0 ) and ( hours_08 is null or hours_08=0 ) and ( hours_09 is null or hours_09=0 ) and ( hours_10 is null or hours_10=0 ) and ( hours_11 is null or hours_11=0 ) and ( hours_12 is null or hours_12=0 ) and ( hours_13 is null or hours_13=0 ) and ( hours_14 is null or hours_14=0 ) and ( hours_15 is null or hours_15=0 ) and ( hours_16 is null or hours_16=0 ) and ( hours_17 is null or hours_17=0 ) and ( hours_18 is null or hours_18=0 ) and ( hours_19 is null or hours_19=0 ) and ( hours_20 is null or hours_20=0 ) and ( hours_21 is null or hours_21=0 ) and ( hours_22 is null or hours_22=0 ) and ( hours_23 is null or hours_23=0 ) and ( hours_24 is null or hours_24=0 )
+	</select>
+	<!-- 查询一个车位当月全部独立设置没有禁用的时间 -->
+	<select id="selectparkMenthAllNotDayRlus" parameterType="hashmap" resultType="string">
+		select thisDay from dayrules where 
+ 			carportId=#{parkid} and thisDay>=#{begin} and thisDay &lt; #{end}
+				and   ( hours_01=1 ||  hours_02=1 ||  hours_03=1 ||  hours_04=1 ||  hours_05=1 ||  hours_06=1 ||  hours_07=1 ||  hours_08=1 ||  hours_09=1 ||  hours_10=1 ||  hours_11=1 ||  hours_12=1 ||  hours_13=1 ||  hours_14=1 ||  hours_15=1 ||  hours_16=1 ||  hours_17=1 ||  hours_18=1 ||  hours_19=1 ||  hours_20=1 ||  hours_21=1 ||  hours_22=1 ||  hours_23=1 ||  hours_24=1 )
+	</select>
+	<!-- 根据parkid查询用户的星期规则 -->
+	<select id="weekTime" resultType="com.sharebo.entity.Weekrules" parameterType="string">
+		select * from weekrules where carportId=#{carportId}
+	</select>
+	<!-- 查询一个的可用时间 -->
+	 <select id="getDayrules" parameterType="hashmap" resultType="com.sharebo.entity.Dayrules">
+	 	select * from dayrules where carportId=#{parkid} and thisDay=#{day}
+	 </select>
+	<!-- 查询停车场详情 -->
+	<select id="selectParkInfo" resultType="com.sharebo.entity.dto.ParkInfoDto" useCache="false">
+	    SELECT count(1) as isCollection,p.parkId,p.parkName,p.parkprice,p.parkAddress,p.chargeType,p.parkstate,p.entryAddress,p.parkType,p.feeModel,p.reservationfee,p.parkbusinessType,p.shouldstop FROM carcollection cc,park p WHERE cc.userid=#{userid} AND p.parkId=cc.identifying AND p.parkId=#{parkId} and (cc.isDelete=0 or cc.isDelete is null)
+	</select>
+	<!-- 查询日期规则是否存在 -->
+	<select id="isExistxByDayrules" parameterType="com.sharebo.entity.Dayrules" resultType="int">
+		select count(1) from Dayrules where thisday=#{thisDay} and carportId=#{carportId}
+	</select>
+		<!-- 添加一个日期规则 -->
+	<insert id="addDayrules" parameterType="com.sharebo.entity.Dayrules">
+		insert into Dayrules values(#{dayid},#{thisDay},#{carportId},#{hours_01} ,#{hours_02} ,#{hours_03} ,#{hours_04} ,#{hours_05} ,#{hours_06} ,#{hours_07} ,#{hours_08} ,#{hours_09} ,#{hours_10} ,#{hours_11} ,#{hours_12} ,#{hours_13} ,#{hours_14} ,#{hours_15} ,#{hours_16} ,#{hours_17} ,#{hours_18} ,#{hours_19} ,#{hours_20} ,#{hours_21} ,#{hours_22} ,#{hours_23} ,#{hours_24})
+	</insert>
+	<!-- 修改当天时间  thisDay=#{thisDay} and-->
+	<update id="updateDayByHours" parameterType="com.sharebo.entity.Dayrules">
+		update Dayrules set hours_01=#{hours_01},hours_02=#{hours_02},hours_03=#{hours_03},hours_04=#{hours_04},hours_05=#{hours_05},hours_06=#{hours_06},hours_07=#{hours_07},hours_08=#{hours_08},hours_09=#{hours_09},hours_10=#{hours_10},hours_11=#{hours_11},hours_12=#{hours_12},hours_13=#{hours_13},hours_14=#{hours_14},hours_15=#{hours_15},hours_16=#{hours_16},hours_17=#{hours_17},hours_18=#{hours_18},hours_19=#{hours_19},hours_20=#{hours_20},hours_21=#{hours_21},hours_22=#{hours_22},hours_23=#{hours_23},hours_24=#{hours_24}
+			where dayid=#{dayid}
+	</update>
+	<!-- 通过车位ID  和时间 查询时间
+		#根据车位id 和时间查询  订单时间b表中会否存在数据  存在说明已经被预约哒！状态必须为已经成功 -->
+	<select id="getOrdertime" resultType="com.sharebo.entity.OrderTime" parameterType="hashmap">
+			select rentDate thisDate,beginTime begin_time,endTime end_time from mycarordertime where 
+		rentDate=#{day} and  cpodId in(
+			select c.cpodId from carportorderdetails c,orderinfo o where c.orderid=o.orderid and o.order_state=1 and carportId=#{parkid})
+	</select>
+	<!--删除车位   通过车位id-->
+	<update id="updateCarPort" parameterType="string">
+		update MyCarPort set isdelete=1 where carportId=#{carportId}
+	</update>
+	<!-- 根据parkId查询停车场信息-->
+	<select id="selectParkDtoInfo" resultType="com.sharebo.entity.dto.ParkDto">
+	    select parkstate,chargeType,parkprice from park where parkId=#{parkId}
+	</select>
+	<!-- 根据housId查询停车位 -->
+	<select id="selectMyCarportInfo" resultType="com.sharebo.entity.dto.MyCarportDto">
+	    SELECT u.name,u.phone,mc.rentoutType,mc.money,mc.feeType,mc.carportId FROM userinfo u,mycarport mc WHERE u.userid = mc.userid AND mc.housId =#{housId} AND (mc.isdelete=0 OR mc.isdelete is NULL) LIMIT 3
+	</select>
+	<!-- 查小区车位总数 -->
+	<select id="valHousIsExixtsCarPortByCarportId" resultType="int" parameterType="string">
+		 select count(1) as count from mycarport cp where ( cp.isdelete =0 or cp.isdelete is null) and cp.housId in( select housId from mycarport where carportId=#{carportId})
+	</select>
+	<!-- 通过#{carportId}得到搞的地图的ID -->
+	<select id="seleclGaodeIdBycarportId" resultType="string" parameterType="string">
+		select gaodeids gaodeIs from  hous h where housId=(select housId from mycarport where carportId=#{carportId})
+	</select>
+	<!-- 添加停车场信息 -->
+	<insert id="addParking" parameterType="com.sharebo.entity.dto.ParkingDto">
+		INSERT INTO park(parkid,parkName,parkAddress,parkbusinessType,entryAddress,ispulic,beBegin,beEnd,parkSum,parkType,automaticOrder,parkprice,chargeType,reservationfee,reservationfeedivide,parkingisdivided,cash,iswhether,gaodeId,partner,userid,createtime,parkstate,feeModel)VALUES(#{parkId},#{parkName},#{parkAddress},#{parkbusinessType},#{entryAddress},0,#{beBegin},#{beEnd},#{parkSum},#{parkType},1,#{parkprice},#{chargeType},#{reservationfee},#{reservationfeedivide},#{parkingisdivided},#{cash},#{iswhether},#{gaodeId},#{partner},#{userid},#{createtime},1,#{feeModel});
+	</insert>
+	<!-- 修改高德id -->
+	<update id="updateparkidbygaodeid" parameterType="com.sharebo.entity.dto.ParkingDto">
+		update park set gaodeId=#{gaodeId} where parkId=#{parkId}
+	</update>
+	<select id="selectSynchronizeGaodeId" parameterType="com.sharebo.entity.dto.ParkingDto" resultType="com.sharebo.entity.dto.ParkingDto" useCache="false">
+		select p.parkId,p.parkName,p.entryAddress,p.parkprice,p.gaodeId,h.housId,p.parkstate FROM park p,hous h where gaodeId is null and h.housName=p.parkName
+	</select>
+	<!-- 长租车位-根据小区 -->
+	<select id="getLongRentByHousId" resultType="com.sharebo.entity.dto.ParkDetailsDto">
+		select cp.carportId,cp.money,lo.beginMonthTime,lo.endMonthTime,h.housId  from mycarport cp,hous h,longrent lo  where cp.housId=h.housId and lo.carportId=cp.carportId
+	and cp.rentoutType=0 and cp.housId in(${housIds}) and (cp.isdelete=0 OR cp.isdelete is NULL)
+	</select>
+	<!-- 包月停车——价格优先 -->
+	<select id="getLongRentInfo" parameterType="hashmap" resultType="com.sharebo.entity.dto.ParkDetailsDto">
+		SELECT cp.money,
+			lo.beginMonthTime,
+			lo.endMonthTime,
+			h.housName as _name,
+			h.housAddress as _address,
+			h.housId as parkId,
+			cp.carportId
+		FROM
+			mycarport cp,
+			hous h,
+			longrent lo
+		WHERE
+			cp.rentoutType = 0
+		AND (
+			cp.isdelete = 0
+			OR cp.isdelete IS NULL
+		)
+		AND cp.housId = h.housId
+		AND lo.carportId=cp.carportId
+		ORDER BY cp.money
+		limit #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询包月停车+价格优先的总数 -->
+	<select id="getLongRentInfoCount" resultType="int">
+		SELECT count(1) FROM mycarport cp,hous h,longrent lo WHERE cp.rentoutType = 0
+		AND (cp.isdelete = 0 OR cp.isdelete IS NULL)
+		AND cp.housId = h.housId
+		AND lo.carportId=cp.carportId
+		ORDER BY cp.money
+	</select>
+	<!-- 分页查询所有单个小区所有车位 -->
+	<select id="getloadAllCarport" parameterType="hashmap" resultType="com.sharebo.entity.dto.MyCarportDto">
+		 SELECT u. NAME,u.phone,mc.rentoutType,mc.money,mc.feeType,mc.carportId FROM userinfo u,mycarport mc WHERE u.userid = mc.userid AND mc.housId =#{housId} AND (mc.isdelete=0 OR mc.isdelete is NULL) limit #{pageBegin},#{pageSize}
+	</select>
+	<select id="getloadAllCarportCount" resultType="Integer">
+		 SELECT count(1) FROM userinfo u, mycarport mc WHERE u.userid = mc.userid AND mc.housId =#{housId} AND (mc.isdelete=0 OR mc.isdelete is NULL)
+	</select>
+	<!-- 根据小区名字查询gaodeID -->
+	<select id="GetGaodeIdByHousName" resultType="com.sharebo.entity.dto.HousDto2">
+		select housId,gaodeIds from hous where housName=#{housName}
+	</select>
+	<!-- 同步小区 -->
+	<insert id="addHous">
+		insert into hous(housId,housName,housAddress,createTime,isaudit,gaodeIds) VALUE(#{housId},#{housName},#{housAddress},now(),1,#{gaodeIds})
+	</insert>
+	<!-- 通过GaodeID得到停车场的收费 -->
+	<select id="getParkPricebygaodeId" resultType="double">
+		select parkprice from park where gaodeId=#{gaodeId}
+	</select>
+	<!-- 查询小区车位的最低价和停车场最低价格 通过carportId -->
+	<select id="getParkMoneyAndCapPortMoneyBycarportId"  resultType="hashmap">
+		SELECT min(cp.money) as cmoney,min(p.parkprice) as pmoney FROM mycarport cp,park p,(SELECT housId FROM mycarport WHERE carportId = #{carportId}) temp WHERE temp.housId = cp.housId AND p.gaodeId=(SELECT gaodeIds FROM hous WHERE housId = temp.housId)
+	</select>
+	<!-- 查询出小区最低价格 -->
+	<select id="getHousMinMoneyByCarportId" resultType="double">
+		select min(money) from mycarport where  (isdelete=0 or isdelete is null) and  housId=(SELECT housId FROM mycarport WHERE carportId =#{carportId})
+	</select>
+	<!-- 查询停车场最低价格 -->
+	<select id="getParkPriceByCarPortId" resultType="double">
+		select parkprice from park where gaodeId=(select gaodeIds from hous where  housId =(SELECT housId FROM mycarport WHERE carportId = #{carportId}))
+	</select>
+</mapper>

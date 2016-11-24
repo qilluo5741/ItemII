@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.ParkChargeMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--停车缴费记录查询  -->
+	<select id="selectParkCharge" parameterType="hashmap" resultType="com.sharebo.entity.dto.ParkChargeDto" useCache="false">
+		SELECT pc.parkcharge,p.parkName,pc.beginTime,pc.practicalMoney,pc.payState,pc.payidentifying FROM parkcharge pc,park p WHERE pc.parkId = p.parkId AND pc.userid= #{userid} and payState=1 order by pc.beginTime desc limit #{pageBegin},#{pageSize} 
+	</select>
+	<!-- 查询缴费记录总数 -->
+	<select id="selectParkChargeCount" resultType="int">
+	    select count(1) from parkcharge where userid=#{userid}
+	</select>
+	<!-- 停车缴费 -->
+	<select id="selectParkChargeInfo" resultType="com.sharebo.entity.dto.ParkChargeInfoDto" useCache="false">
+		SELECT p.parkName,pc.practicalMoney,pc.payState,pc.beginTime,pc.endTime,pc.parkId,pc.payidentifying FROM park p,parkcharge pc WHERE parkcharge =#{parkcharge} AND p.parkId = pc.parkId
+	</select>
+</mapper>

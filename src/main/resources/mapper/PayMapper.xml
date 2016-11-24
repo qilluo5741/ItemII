@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.PayMapper">
+	<!-- 验证订单是否存在，并且得到费用 -->
+	<select id="getCountMoneyByOrderNum" resultType="double">
+		select countMoney from orderinfo where orderNum=#{orderNum} and payType=0;
+	</select>
+	<!-- 根据用户Id查询剩余的余额 -->
+	<select id="getAvailableBalanceByuserid" resultType="double">
+		select availableBalance from wallet where userid=#{userid}
+	</select>
+	<!-- 修改余额 -->
+	<update id="updateAvailableBalanceByUserid">
+		update wallet set availableBalance=availableBalance-#{countMoney} where  userid=#{userid} and availableBalance>=#{countMoney}
+	</update>
+	<!-- 修改订单的状态 -->
+	<update id="updateOrderinfo">
+		update orderinfo set payType=#{payType},payment_time=NOW() where orderNum=#{orderNum} and order_state=0
+	</update>
+	<!-- 添加交易记录 -->
+	<insert id="addtransactionrecord">
+		insert into transactionrecord(trid,userid,tradeType,tradeMoney,tradeTime,recordstate) VALUE(UUID_SHORT(),#{userid},#{tradeType},#{tradeMoney},now(),0)
+	</insert>
+	<!-- 验证是否是个人车位 -->
+	<select id="valOrderTypeByOrderNum" resultType="int">
+		SELECT orderType FROM orderinfo WHERE orderNum=#{orderNum}
+	</select>
+	<!-- 判断该公共停车场保安是否自动接单 -->
+	<select id="valParkAutomaticOrder" resultType="int">
+		SELECT p.automaticOrder FROM orderinfo o,parkorderdetails pod,park p WHERE o.orderId=pod.orderId AND p.parkId=pod.parkId AND o.orderId=(SELECT orderId FROM orderinfo WHERE orderNum=#{orderNum})
+	</select>
+	<!-- 修改订单状态 -->
+	<update id="updateOrderStateByOrderNum" >
+		update orderinfo set order_state=#{order_state} where ordernum=#{orderNum}
+	</update>
+	<!-- 通过订单号码查询退款金额 以及userid -->
+	<select id="getCountMoneyAndUseridByorderNum" resultType="com.sharebo.entity.dto.CallBackRefuceInfo">
+		select o.countMoney,u.userid from orderinfo o,userinfo u where
+		u.userid=o.userid and o.orderNum=#{orderNum} and
+		o.order_state=0 and o.payType!=0
+	</select>
+	<!-- 给用户加钱 -->
+	<update id="updateAvailableBalance">
+		update wallet set availableBalance=availableBalance+#{availableBalance} where userid=#{userid}
+	</update>
+	<!-- 支付宝订单号查询userid -->
+	<select id="valParkOrderByuserid" resultType="string">
+		select userid from orderinfo where ordernum=#{orderNum}
+	</select>
+	<!-- 推送查询regid -->
+	<select id="getloadAllcarNoandregid" resultType="com.sharebo.entity.dto.UserorregidDto" useCache="false">
+		SELECT o.carNo,u.regid,u.phone,p.parkId FROM orderinfo o,userinfo u,parkorderdetails p where o.orderId = p.orderId and u.userid=(SELECT userid FROM orderinfo where orderNum=#{orderNum}) and o.orderNum=#{orderNum}
+	</select>
+	<!-- 验证订单是否存在，并且得到费用 -->
+	<select id="getpayMoneyBypayidentifying" resultType="double">
+		select payMoney from parkcharge where payidentifying=#{payidentifying} and payState=0
+	</select>
+	<!-- 修改缴费的状态 -->
+	<update id="updateparkcharge">
+		update parkcharge set payState=1,payType=#{payType},payTime=NOW() where payidentifying=#{payidentifying} and payState=0
+	</update>
+	<!-- 根据查询停车缴费userid -->
+	<select id="getvalparkchargeByuserid" resultType="string">
+		select userid from parkcharge where payidentifying=#{payidentifying}
+	</select>
+</mapper>

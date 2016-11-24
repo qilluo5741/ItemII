@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.MonthlyMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--添加包月信息  -->
+	<insert id="addMonthlyation" parameterType="com.sharebo.entity.Monthly">
+		insert into monthly(monthId,parkname,parkAddress,entryaddress,parkprice,source,parktype,parktips,business,appropriate,contact,informa,parkimage,parktime,isdelete) values(UUID_SHORT(),#{parkname},#{parkAddress},#{entryaddress},#{parkprice},#{source},#{parktype},#{parktips},#{business},1,#{contact},#{informa},#{parkimage},NOW(),0)
+	</insert>
+	<!--添加宜停信息  -->
+	<insert id="addShouldMonthlyation" parameterType="com.sharebo.entity.Monthly">
+		insert into monthly(monthId,parkname,parkAddress,entryaddress,parkprice,source,parktype,parktips,business,appropriate,parkimage,parktime,isdelete,indelete) values(UUID_SHORT(),#{parkname},#{parkAddress},#{entryaddress},#{parkprice},#{source},#{parktype},#{parktips},#{business},0,#{parkimage},NOW(),0,1)
+	</insert>
+	<!-- 模糊查询 -->
+	<select id="selectByparknameorparkAddress" resultType="com.sharebo.entity.dto.MonthlyDto">
+		select m.monthId,m.parkname,m.parkAddress,m.appropriate from monthly m where m.parkname like '%${parkname}%' or m.parkAddress like '%${parkname}%' and isdelete=0 LIMIT 10
+	</select>
+	<!-- 验证是否停车场 -->
+	<select id="valMonthlyIsExixtsByparkname" resultType="int">
+		select count(1) from monthly where parkname=#{parkname}
+	</select>
+	<!-- 查询 -->
+	<select id="getMonthlybymonthId" resultType="com.sharebo.entity.Monthly" useCache="false">
+		select monthId,parkname,parkAddress,entryaddress,parkprice,source,parktype,parktips,business,appropriate,contact,informa,parkimage from Monthly where monthId=#{monthId}
+	</select>
+	<!-- 修改包月信息 -->
+	<update id="updateMonthlyation" parameterType="com.sharebo.entity.Monthly">
+		update monthly set parkname=#{parkname},parkAddress=#{parkAddress},entryaddress=#{entryaddress},parkprice=#{parkprice},source=#{source},parktype=#{parktype},parktips=#{parktips},business=#{business},contact=#{contact},informa=#{informa},parkimage=#{parkimage} where monthId=#{monthId}
+	</update>
+	<!-- 修改宜停信息 -->
+	<update id="updateShouldMonthlyation" parameterType="com.sharebo.entity.Monthly">
+		update monthly set parkname=#{parkname},parkAddress=#{parkAddress},entryaddress=#{entryaddress},parkprice=#{parkprice},source=#{source},parktype=#{parktype},parktips=#{parktips},business=#{business},parkimage=#{parkimage} where monthId=#{monthId}
+	</update>
+	<select id="getMonthlybyappropriate" resultType="com.sharebo.entity.Monthly" useCache="false">
+		select * from Monthly where appropriate=0
+	</select>
+	<!-- 包月分页查询 -->
+	<select id="getloadAllMonthDtoer" parameterType="hashmap" resultType="com.sharebo.entity.dto.MonthDto">
+		SELECT monthId,parkname,parkAddress,parkprice,source,parktype,appropriate from monthly where isdelete=0 and appropriate=1 ORDER BY parktime desc LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询总数 -->
+	<select id="getMonthDtoerCount" parameterType="string" resultType="int">
+		select count(1) from monthly WHERE isdelete=0 and appropriate=1
+	</select>
+	<!-- 查询所有信息 -->
+	<select id="getMonthlydetailsbymonthId" resultType="com.sharebo.entity.dto.Monthlydetails" useCache="false">
+		select monthId,parkname,parkAddress,entryaddress,parkprice,source,parktype,parktips,business,appropriate,contact,informa,parkimage from Monthly where monthId=#{monthId}
+	</select>
+	<!-- 同步临停数据 -->
+	<insert id="addParkMonthation" parameterType="com.sharebo.entity.dto.ParkMonth">
+		insert into park(parkid,parkName,parkAddress,parkbusinessType,entryAddress,
+		parkstate,feeModel,parkpicture,createtime,shouldstop,parkType,parkSum,parkPrice,chargeType) 
+		VALUES(UUID_SHORT(),#{parkName},#{parkAddress},#{parkbusinessType},#{entryAddress},#{parkstate},
+		#{feeModel},#{parkpicture},NOW(),#{shouldstop},#{parkType},#{parkSum},#{parkPrice},#{chargeType}); 
+	</insert>
+	<!-- 只是同步用一次！没啥用的 -->
+	<select id="getMonthly" resultType="com.sharebo.entity.Monthly">
+		select * from Monthly where appropriate=0 and indelete is null
+	</select>
+	<!--同步临停数据到小区表  -->
+	<insert id="addHous" parameterType="com.sharebo.entity.Hous">
+		insert into hous(housId,housName,housAddress,createTime,isaudit) VALUES(UUID_SHORT(),#{housName},#{housAddress},NOW(),1)
+	</insert>
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.CarcollectionMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!--查询是否存在 -->
+	<select id="getCarcollectionydoesitexist" parameterType="com.sharebo.entity.Carcollection" useCache="true" resultType="int">
+		select count(1) from carcollection where userid=#{userid} and identifying=#{identifying} and carType=#{carType} and isDelete=0
+	</select>
+	<!-- 删除收藏 -->
+	<update id="updateCarcollectiony" parameterType="com.sharebo.entity.Carcollection">
+		update carcollection set isDelete=#{isDelete} where userid=#{userid} and identifying=#{identifying} and carType=#{carType}
+	</update>
+	<!-- 添加收藏 -->
+	<insert id="addCarcollection" parameterType="com.sharebo.entity.Carcollection">
+		insert into Carcollection(ccId,carType,userid,identifying,collectTime,isDelete) values(UUID_SHORT(),#{carType},#{userid},#{identifying},#{collectTime},0)
+	</insert>
+	<select id="getloadAllAltogether" parameterType="hashmap" resultType="com.sharebo.entity.dto.AltogetherDto">
+		SELECT
+			p.parkid,p.parkname,p.parkAddress,p.parkprice,c.cartype,c.userid,p.chargeType
+		FROM
+			park p,carcollection c
+		WHERE
+			p.parkid IN (SELECT c.identifying FROM carcollection c WHERE c.userid = #{userid}
+				AND c.isDelete = 0
+				AND c.carType = 1
+			)
+		and c.userid=#{userid}
+		and c.identifying=p.parkid
+		and c.isDelete = 0
+		limit #{pageBegin},#{pageSize}
+	</select>
+	<select id="getAltogetherCount" resultType="Integer">
+    	SELECT
+			count(1)
+		FROM
+			park p,carcollection c
+		WHERE
+			p.parkid IN (SELECT c.identifying FROM carcollection c WHERE c.userid = #{userid}
+				AND isDelete = 0
+				AND carType = 1
+			)
+		and c.identifying=p.parkid
+	</select>
+	<!-- 个人车位查询 -->
+	<select id="getloadAllPersonalarea" parameterType="hashmap" resultType="com.sharebo.entity.dto.PersonalareaDto">
+		SELECT
+		h.housid,
+		h.housName,
+		h.housAddress,
+		c.cartype,
+		m.money,
+		m.rentoutType,
+		m.feeType,
+		c.userid,
+		c.identifying
+	FROM
+		mycarport m,
+		carcollection c,
+		hous h
+	WHERE
+		carportId IN (
+			SELECT
+				identifying
+			FROM
+				carcollection
+			WHERE
+				userid = #{userid}
+			AND isDelete = 0
+			AND carType = 2
+		)
+	AND c.identifying = m.carportId
+	AND m.housid = h.housid
+	limit #{pageBegin},#{pageSize}
+	</select>
+	<select id="getloadAllPersonalareaCount" resultType="Integer">
+	SELECT
+			count(1)
+		FROM
+			mycarport m,
+			carcollection c,
+			hous h
+		WHERE
+			carportId IN (
+				SELECT
+					identifying
+				FROM
+					carcollection
+				WHERE
+					userid = #{userid}
+				AND isDelete = 0
+				AND carType = 2
+			)
+		AND c.identifying = m.carportId
+		AND m.housid = h.housid
+	</select>
+</mapper>

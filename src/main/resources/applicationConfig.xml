@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!--==============================支付宝配置属性==============================-->
+	<bean name="ApayConfig" class="com.sharebo.config.ApayConfig">
+		<property name="partner" value="${alipay.partner}"/>
+		<property name="private_key" value="${alipay.private_key}"/>
+		<property name="ali_public_key" value="${alipay.ali_public_key}"/>
+	</bean>
+	<!--================================  end ================================-->
+	
+	<!-- ==============================微信配置属性===============================-->
+	<bean name="WeiXinConfig" class="com.sharebo.config.WeiXinConfig">
+		<property name="aap_key" value="${weixin.APP_KEY}"/>
+		<property name="app_id" value="${weixin.APP_ID}"/>
+	</bean>
+	<!--================================  end ================================-->
+	
+	<!-- ==============================高德地图==================================-->
+	<bean name="gaodeConfig" class="com.sharebo.config.GaodeConfig">
+		<property name="appKey"  value="${gaode.appKey}"/>
+		<property name="tableid" value="${gaode.tableid}"/>
+	</bean>
+	<!--==============================  end  =================================-->
+
+	<!-- ==============================推送配置==================================-->
+	<bean name="JpushConfig" class="com.sharebo.config.JpushConfig">
+		<property name="masterSecret" value="${jpush.masterSecret}" />
+		<property name="appKey" value="${jpush.appKey}" />
+	</bean>
+	<!--==============================  end ==================================-->
+	
+	<!--===============================短信配置==================================-->
+	<bean name="smsConfig" class="com.sharebo.config.SmsConfig">
+		<property name="valueMap">
+			<map>
+				<entry key="smsHuaxin.url" value="${smsHuaxin.url}"/>
+				<entry key="smsHuaxin.content_1" value="${smsHuaxin.content_1}"/>
+				<entry key="smsHuaxin.content_2" value="${smsHuaxin.content_2}"/>
+				<entry key="smsHuaxin.content_3" value="${smsHuaxin.content_3}"/>
+				<entry key="smsHuaxin.content_4" value="${smsHuaxin.content_4}"/>
+				<entry key="smsHuaxin.content_5" value="${smsHuaxin.content_5}"/>
+				<entry key="smsChuanglan.url" value="${smsChuanglan.url}"/>
+				<entry key="smsChuanglan.account" value="${smsChuanglan.account}"/>
+				<entry key="smsChuanglan.pswd" value="${smsChuanglan.pswd}"/>
+				<entry key="smsChuanglan.needstatus" value="${smsChuanglan.needstatus}"/>
+				<entry key="smsChuanglan.content_1" value="${smsChuanglan.content_1}"/>
+			</map>
+		</property>
+	</bean>
+	<!--==============================  end ==================================-->
+	
+	<!--===============================OSS配置=================================-->
+	<bean id="ossConfig" class="com.sharebo.config.OssConfig">
+		<property name="ossHost"  value="${oss.ossHost}"/>
+		<property name="ossHostInternal" value="${oss.ossHostInternal}"/>
+		<property name="ossBucket" value="${oss.ossBucket}"/>
+		<property name="ossFolder" value="${oss.ossFolder}"/>
+		<property name="ossAccount" value="${oss.ossAccount}"/>
+		<property name="ossPassword" value="${oss.ossPassword}" />
+	</bean>
+	<!--==============================  end ==================================-->
+	
+	<!-- ==============================任务调度配置=============================== -->
+	<bean class="com.job.jobclient.Jobclient">
+		<!-- 任务调度系统服务端请求地址 -->
+		<property name="url" value="${job.url}"/>
+		<!-- 任务组加密标识 -->
+		<property name="token" value="${job.token}"/>
+		<!-- 任务处理地址 -->
+		<property name="backUrl" value="${job.backUrl}"/>
+	</bean>
+	<bean class="com.sharebo.config.JobConfig">
+		<property name="jobName_orderCancel" value="${job.jobName_orderCancel}"/>
+		<property name="jobName_orderRefused" value="${job.jobName_orderRefused}"/>
+	</bean>
+	<!--==============================  end ==================================-->
+	
+	<!-- ==============================redis参数配置============================ -->
+	<!-- redis连接池参数配置 -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<!-- 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时, 默认true -->
+		<property name="blockWhenExhausted" value="${redis.blockWhenExhausted}"/>
+		<!-- 设置的逐出策略类名, 默认DefaultEvictionPolicy(当连接超过最大空闲时间,或连接数超过最大空闲连接数) -->
+		<property name="evictionPolicyClassName" value="${redis.evictionPolicyClassName}"/>
+		<!-- 是否启用pool的jmx管理功能, 默认true -->
+		<property name="jmxEnabled" value="${redis.jmxEnabled}"/>
+		<!--MBean ObjectName = new ObjectName("org.apache.commons.pool2:type=GenericObjectPool,name=" 
+			+ "pool" + i); 默认为"pool", JMX不熟,具体不知道是干啥的...默认就好. -->
+		<property name="jmxNamePrefix" value="${redis.jmxNamePrefix}" />
+		<!-- 是否启用后进先出, 默认true -->
+		<property name="lifo" value="${redis.lifo}" />
+		<!-- 最大空闲连接数, 默认8个 -->
+		<property name="maxIdle" value="${redis.maxIdle}"/>
+		<!-- 最大连接数 -->
+		<property name="maxTotal" value="${redis.maxTotal}" />
+		<!-- 获取连接时的最大等待毫秒数(如果设置为阻塞时BlockWhenExhausted),如果超时就抛异常, 小于零:阻塞不确定的时间, 默认-1 -->
+		<property name="maxWaitMillis" value="${redis.maxWaitMillis}" />
+		<!-- 逐出连接的最小空闲时间 默认1800000毫秒(30分钟) -->
+		<property name="minEvictableIdleTimeMillis" value="${redis.minEvictableIdleTimeMillis}" />
+		<!--最小空闲连接数, 默认0 -->
+		<property name="minIdle" value="${redis.minIdle}"/>
+		<!-- 每次逐出检查时 逐出的最大数目 如果为负数就是 : 1/abs(n), 默认3 -->
+		<property name="numTestsPerEvictionRun" value="${redis.numTestsPerEvictionRun}" />
+		<!-- 对象空闲多久后逐出, 当空闲时间>该值 且 空闲连接>最大空闲数 时直接逐出,不再根据MinEvictableIdleTimeMillis判断 
+			(默认逐出策略) -->
+		<property name="softMinEvictableIdleTimeMillis" value="${redis.softMinEvictableIdleTimeMillis}" />
+		<!-- 在获取连接的时候检查有效性, 默认false -->
+		<property name="testOnBorrow" value="${redis.testOnBorrow}" />
+		<!-- 在空闲时检查有效性, 默认false -->
+		<property name="testWhileIdle" value="${redis.testWhileIdle}" />
+		<!-- 逐出扫描的时间间隔(毫秒) 如果为负数,则不运行逐出线程, 默认-1 -->
+		<property name="timeBetweenEvictionRunsMillis" value="${redis.timeBetweenEvictionRunsMillis}" />
+	</bean>
+	<bean class="com.sharebo.util.RedisUtil" init-method="initConfig">
+		<property name="config" ref="jedisPoolConfig" />
+		<property name="address" value="${redis.address}" />
+		<property name="port" value="${redis.port}" />
+	</bean>
+	<!--==============================  end ==================================-->
+</beans>

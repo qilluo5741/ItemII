@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.UserinfoMapper">
+	<cache readOnly="true" size="500" flushInterval="120000" eviction="LRU"/>
+	<!-- 查询个人信息 -->
+	<select id="getloadAllUserinfotype" resultType="com.sharebo.entity.dto.Userinfodto" useCache="false">
+		select u.userid,u.name,u.sex,u.age,u.headportrait,u.beenDriv,u.signature,(SELECT count(0) number FROM orderinfo where userid=#{userid}) number from userinfo u where u.userid=#{userid}
+	</select>
+	<!-- 修改头像 -->
+	<update id="updateheadportrait" parameterType="com.sharebo.entity.dto.Userinfodto">
+		update userinfo set headportrait=#{headportrait} where userid=#{userid}
+	</update>
+	<!-- 修改姓名 -->
+	<update id="updatename" parameterType="com.sharebo.entity.dto.Userinfodto">
+		update userinfo set name=#{name} where userid=#{userid}
+	</update>
+	<!-- 修改性别 -->
+	<update id="updatesex" parameterType="com.sharebo.entity.dto.Userinfodto">
+		update userinfo set sex=#{sex} where userid=#{userid}
+	</update>
+	<!-- 修改年龄-->
+	<update id="updateage" parameterType="com.sharebo.entity.dto.Userinfodto">
+		update userinfo set age=#{age} where userid=#{userid}
+	</update>
+	<!-- 修改驾龄-->
+	<update id="updatebeenDriv" parameterType="com.sharebo.entity.dto.Userinfodto">
+		update userinfo set beenDriv=#{beenDriv} where userid=#{userid}
+	</update>
+	<!-- 修改个性签名-->
+	<update id="updatesignature" parameterType="com.sharebo.entity.dto.Userinfodto">
+		update userinfo set signature=#{signature} where userid=#{userid}
+	</update>
+	<!-- 查询gid -->
+	<select id="getregidByUserid" parameterType="com.sharebo.entity.dto.UserinfoRegid" resultType="string">
+		select regid from userinfo where userid=#{userid}
+	</select>
+	<!-- 修改gid -->
+	<update id="updateRegIdByUserid" parameterType="com.sharebo.entity.dto.UserinfoRegid">
+		update userinfo set regid=#{regid} where userid=#{userid}
+	</update>
+	<!-- 修改payNo -->
+	<update id="updatePayNoByUserid" parameterType="com.sharebo.entity.dto.UserWithDto">
+	    update userinfo set payNo=#{payNo} where userid=#{userid}
+	</update>
+	<!-- 查询用户收款账号payNo -->
+	<select id="getPayNoByUserid"  resultType="String">
+	    select payNo from userinfo where userid=#{userid}
+	</select>
+	<!-- 查询头像 -->
+	<select id="getUserheadportraitByUserid" parameterType="com.sharebo.entity.dto.Userheadportrait" resultType="com.sharebo.entity.dto.Userheadportrait" >
+	    select headportrait,name,phone from userinfo where userid=#{userid}
+	</select>
+	<!-- 验证token -->
+	<select id="getvalTokenByUserid" resultType="Integer" useCache="false">
+		select count(1) from userinfo where valToken=#{valToken} and userid=#{userid}
+	</select>
+	<!-- 查询用户支付宝账户，可用余额 -->
+	<select id="selectPayNoAndAvailableBalance" resultType="com.sharebo.entity.dto.UserDto">
+	   SELECt u.payNo,w.availableBalance FROM userinfo u,wallet w WHERE u.userid=w.userid and u.userid=#{userid}
+	</select>
+	<select id="selectbyuserid" resultType="com.sharebo.entity.dto.Userinfodto">
+	   SELECt * FROM userinfo
+	</select>
+	<!-- 清空valToken -->
+	<update id="getdelectvalTokenByUserid" parameterType="com.sharebo.entity.dto.UserTokenDto">
+		update userinfo set valToken=#{valToken} where userid=#{userid}
+	</update>
+	<update id="getvalreactivetimeByUserid" parameterType="com.sharebo.entity.dto.UserTokenDto">
+		update userinfo set reactivetime=now() where userid=#{userid}
+	</update>
+</mapper>
